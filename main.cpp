@@ -5,91 +5,97 @@
 #include <sstream>
 
 template <typename name>
-class matrix {
-    std::vector<std::vector<name>> mat;
-    int n = 0;
-    int m = 0;
+class matrix : public std::error_code {
+    std::vector<std::vector<name>> main_matrix;
+    size_t line = 0;
+    size_t column = 0;
 public:
     matrix() {
-        name el;
-        std::vector<name> val;
-        std::cin >> n >> m;
-        for (int i = 0; i < n; ++i) {
-            mat.push_back(val);
-            for (int j = 0; j < m; ++j) {
-                mat[i].push_back(std::cin >> el);
+        name elem;
+        std::vector<name> value;
+        std::cout << "Enter the size of the matrix and then the values \n";
+        std::cin >> line >> column;
+        for (size_t i = 0; i < line; ++i) {
+            main_matrix.push_back(value);
+            for (size_t j = 0; j < column; ++j) {
+                std::cin >> elem;
+                main_matrix[i].push_back(elem);
             }
         }
     }
-    matrix(int line, int column) : n(line), m(column) {
+    matrix(size_t line, size_t column) : line(line), column(column) {
+        // std::vector<std::vector<name>> main_matrix(line, std::vector<int>(column, 0));
         std::vector<name> val;
-        for (int i = 0; i < n; ++i) {
-            mat.push_back(val);
-            for (int j = 0; j < m; ++j) {
-                mat[i].push_back(0);
+        for (int i = 0; i < line; ++i) {
+            main_matrix.push_back(val);
+            for (int j = 0; j < column; ++j) {
+                main_matrix[i].push_back(0);
             }
         }
     }
 
     matrix(std::string s) {
         std::ifstream file(s);
-        std::string a;
+        std::string str;
         if (file.is_open()) {
-            file >> n >> m;
-            for(int i = 0; i < n; ++i) {
-                std::getline(file, a);
-                std::stringstream(a);
-                std::vector<name> val;
-                name el;
-                for (int j = 0; j < m; ++j) {
-                    a >> el;
-                    val.push_back(el);
+            file >> line >> column;
+            for(size_t i = 0; i < line; ++i) {
+                std::getline(file, str);
+                std::stringstream(str);
+                std::vector<name> value;
+                name elem;
+                for (size_t j = 0; j < column; ++j) {
+                    str >> elem;
+                    value.push_back(elem);
                 }
-                mat.push_back(val);
+                main_matrix.push_back(value);
             }
-        }
+        } else throw std::runtime_error("File is close");
     }
 
     ~matrix() {
-        mat = {};
-        n = 0;
-        m = 0;
+        main_matrix = {};
+        line = 0;
+        column = 0;
     }
 
     template<typename type>
-    friend matrix<type> operator*(matrix<type> &a, type scalar);
+    friend matrix<type> operator*(const matrix<type> &matrix_1, type scalar);
 
     template<typename type>
-    friend matrix<type> operator*(matrix<type> &a, matrix<type> &b);
+    friend matrix<type> operator*(const matrix<type> &matrix_1, const matrix<type> &matrix_2);
 
     template<typename type>
-    friend matrix<type> operator+(matrix<type> &a, matrix<type> &b);
+    friend matrix<type> operator+(const matrix<type> &matrix_1, const matrix<type> &matrix_2);
 
     template<typename type>
-    friend matrix<type> operator-(matrix<type> &a, matrix<type> &b);
+    friend matrix<type> operator-(const matrix<type> &matrix_1, const matrix<type> &matrix_2);
 
-    matrix<name> &operator=(const matrix<name> &a) {
-        n = a.n;
-        m = a.m;
-        mat = a.mat;
+    template<typename type>
+    friend std::ostream &operator<<(std::ostream &out, matrix<type> matrix_1);
+
+    matrix<name> &operator=(const matrix<name> &matrix_1) {
+        this->line = matrix_1.line;
+        this->column = matrix_1.column;
+        this->main_matrix = matrix_1.main_matrix;
         return *this;
     }
 
-    bool operator==(const matrix<name> &a) const {
-        if (n != a.n || m != a.m ) return false;
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < m; ++j) {
-                if (a[i][j] != mat[i][j]) return false;
+    bool operator==(const matrix<name> &matrix_1) const {
+        if (line != matrix_1.line || column != matrix_1.column ) return false;
+        for (size_t i = 0; i < line; ++i) {
+            for (size_t j = 0; j < column; ++j) {
+                if (matrix_1[i][j] != main_matrix[i][j]) return false;
             }
         }
         return true;
     }
 
-    bool operator!=(const matrix<name> &a) const {
-        if (n != a.n || m != a.m ) return true;
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < m; ++j) {
-                if (a[i][j] != mat[i][j]) return true;
+    bool operator!=(const matrix<name> &matrix_1) const {
+        if (line != matrix_1.line || column != matrix_1.column ) return true;
+        for (size_t i = 0; i < line; ++i) {
+            for (size_t j = 0; j < column; ++j) {
+                if (matrix_1[i][j] != main_matrix[i][j]) return true;
             }
         }
         return false;
@@ -97,50 +103,50 @@ public:
 
     bool operator==(int item) {
         if (item == 0) {
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < m; ++j) {
-                    if (mat[i][j] != 0) return false;
+            for (size_t i = 0; i < line; ++i) {
+                for (size_t j = 0; j < column; ++j) {
+                    if (main_matrix[i][j] != 0) return false;
                 }
             }
         } else if (item == 1) {
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < m; ++ j) {
-                    if ((i == j && mat[i][j] != 1) || (i != j && mat[i][j] != 0)) return false;
+            for (size_t i = 0; i < line; ++i) {
+                for (size_t j = 0; j < column; ++ j) {
+                    if ((i == j && main_matrix[i][j] != 1) || (i != j && main_matrix[i][j] != 0)) return false;
                 }
             }
-        }
+        } else throw std::runtime_error("The check should be for a single and zero matrix");
         return true;
     }
 
     matrix<name> operator!() const {
-        if (n != m) {
-            std::cerr << "Not square matrix";
+        if (line != column) {
+            throw std::runtime_error("Matrix is not square");
         }
     }
 };
 
 template<typename type>
-matrix<type> operator*(matrix<type> &a, type scalar) {
-    matrix<type> m(a.n, a.m);
-    for (int i = 0; i < a.n; ++i) {
-        for (int j = 0; j < a.m; ++j) {
-            m.mat[i][j] = a.mat[i][j] * scalar;
+matrix<type> operator*(const matrix<type> &matrix_1, type scalar) {
+    matrix<type> m(matrix_1.line, matrix_1.column);
+    for (size_t i = 0; i < matrix_1.line; ++i) {
+        for (size_t j = 0; j < matrix_1.column; ++j) {
+            m.main_matrix[i][j] = matrix_1.main_matrix[i][j] * scalar;
         }
     }
     return m;
 }
 
 template<typename type>
-matrix<type> operator*(matrix<type> &a, matrix<type> &b) {
-    if(a.m != b.n) {
-        std::cerr << "Not same values for multiplication";
+matrix<type> operator*(const matrix<type> &matrix_1, const matrix<type> &matrix_2) {
+    if(matrix_1.column != matrix_2.line) {
+        throw std::runtime_error("Not same values for multiplication");
     }
-    matrix<type> m(a.n, b.m);
-    for (int i = 0; i < a.n; ++i) {
-        for (int j = 0; j < b.m; ++j) {
-            m.mat[i][j] = 0;
-            for (int k = 0; k < a.m; ++k) {
-                m.mat[i][j] += a.mat[i][k] * b.mat[k][j];
+    matrix<type> m(matrix_1.line, matrix_2.column);
+    for (size_t i = 0; i < matrix_1.line; ++i) {
+        for (size_t j = 0; j < matrix_2.column; ++j) {
+            m.main_matrix[i][j] = 0;
+            for (int k = 0; k < matrix_1.column; ++k) {
+                m.main_matrix[i][j] += matrix_1.main_matrix[i][k] * matrix_2.main_matrix[k][j];
             }
         }
     }
@@ -148,34 +154,50 @@ matrix<type> operator*(matrix<type> &a, matrix<type> &b) {
 }
 
 template<typename type>
-matrix<type> operator+(matrix<type> &a, matrix<type> &b) {
-    if(a.n != b.n || a.m != b.m) {
-        std::cerr << "Not same values for addition";
+matrix<type> operator+(const matrix<type> &matrix_1, const matrix<type> &matrix_2) {
+    if(matrix_1.line != matrix_2.line || matrix_1.column != matrix_2.column) {
+        throw std::runtime_error("Not same values for addition");
     }
-    matrix<type> m(a.n, a.m);
-    for(int i = 0; i < a.n; ++i) {
-        for (int j = 0; j < a.m; ++j) {
-            m.mat[i][j] = a.mat[i][j] + b.mat[i][j];
+    matrix<type> m(matrix_1.line, matrix_1.column);
+    for(size_t i = 0; i < matrix_1.line; ++i) {
+        for (size_t j = 0; j < matrix_1.column; ++j) {
+            m.main_matrix[i][j] = matrix_1.main_matrix[i][j] + matrix_2.main_matrix[i][j];
         }
     }
     return m;
 }
 
 template<typename type>
-matrix<type> operator-(matrix<type> &a, matrix<type> &b) {
-    if(a.n != b.n || a.m != b.m) {
-        std::cerr << "Not same values for subtraction";
+matrix<type> operator-(const matrix<type> &matrix_1, const matrix<type> &matrix_2) {
+    if(matrix_1.line != matrix_2.line || matrix_1.column != matrix_2.column) {
+        throw std::runtime_error("Not same values for subtraction");
     }
-    matrix<type> m(a.n, a.m);
-    for(int i = 0; i < a.n; ++i) {
-        for (int j = 0; j < a.m; ++j) {
-            m.mat[i][j] = a.mat[i][j] - b.mat[i][j];
+    matrix<type> m(matrix_1.line, matrix_1.column);
+    for(size_t i = 0; i < matrix_1.line; ++i) {
+        for (size_t j = 0; j < matrix_1.column; ++j) {
+            m.main_matrix[i][j] = matrix_1.main_matrix[i][j] - matrix_2.main_matrix[i][j];
         }
     }
     return m;
 }
 
+template<typename type>
+std::ostream &operator<<(std::ostream &out, matrix<type> matrix_1) {
+    for (size_t i = 0; i < matrix_1.line; ++i) {
+        for (size_t j = 0; j < matrix_1.column; ++j) {
+            out << matrix_1.main_matrix[i][j] << " ";
+        }
+        out << std::endl;
+    }
+    out << std::endl;
+}
+
 int main() {
+    matrix<int> M;
+    matrix<int> M1;
+    std::cout << "matrix addition: \n" << M + M1;
+    std::cout << "matrix multiplication: \n" << M * M1;
+    std::cout << "multiplying a matrix by a number: \n" << M * 2;
 
     return 0;
 }
